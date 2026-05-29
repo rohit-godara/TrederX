@@ -9,7 +9,7 @@ export const getErrorMsg = (err, fallback = "Something went wrong") => {
 };
 
 // Use env variable if set, else use local proxy (package.json proxy: localhost:8000)
-const BASE_URL = process.env.REACT_APP_API_URL || "/api";
+const BASE_URL = process.env.REACT_APP_API_URL || "https://treder-x.vercel.app/api";
 
 const api = axios.create({ baseURL: BASE_URL });
 
