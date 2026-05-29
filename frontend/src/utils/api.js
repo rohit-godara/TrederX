@@ -1,0 +1,40 @@
+import axios from "axios";
+
+export const getErrorMsg = (err, fallback = "Something went wrong") => {
+  const detail = err?.response?.data?.detail;
+  if (!detail) return fallback;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) return detail.map(d => d.msg || JSON.stringify(d)).join(", ");
+  return fallback;
+};
+
+// Use env variable if set, else use local proxy (package.json proxy: localhost:8000)
+const BASE_URL = process.env.REACT_APP_API_URL || "/api";
+
+const api = axios.create({ baseURL: BASE_URL });
+
+api.interceptors.request.use((config) => {
+  try {
+    const persisted = localStorage.getItem("traderx-auth");
+    const token = persisted ? JSON.parse(persisted)?.state?.token : null;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  } catch {}
+  return config;
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (
+      err.response?.status === 401 &&
+      !window.location.pathname.includes("/login") &&
+      !err.config?.url?.includes("/auth/")
+    ) {
+      localStorage.removeItem("traderx-auth");
+      window.location.href = "/login";
+    }
+    return Promise.reject(err);
+  }
+);
+
+export default api;
